@@ -1,0 +1,145 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f8ff;
+    color: #333;
+    margin: 0;
+}
+header {
+    padding: 0.2%;
+    background-color: #1e90ff;
+    margin-bottom: 1%;
+}
+header img {
+    width: 150px;
+}
+.drop-container {
+    border: 2px dashed #1e90ff;
+    border-radius: 15px;
+    padding: 20px 0;
+    margin: 0 auto 20px auto;
+    background-color: #e6f7ff;
+}
+.drop-container p {
+    margin: 0;
+    color: #1e90ff;
+    font-size: 1.5rem;
+    text-align: center;
+}
+.image-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dragover {
+    border-color: #000;
+    background-color: #105daa;
+}
+.image-container {
+    position: relative;
+    padding: 1%;
+    box-sizing: border-box;
+    max-width: 300px;
+    max-height: 300px;
+    width: 40vw;
+    height: 40vw;
+}
+.image-container img {
+    border: 2px solid #1e90ff;
+    border-radius: 10px;
+    max-width: 90%;
+    max-height: 90%;
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    position: absolute;
+}
+button {
+    margin-bottom: 10px;
+    background-color: #1e90ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+button:hover {
+    background-color: #187bcd;
+}
+.arrow {
+    width: 4%;
+    height: 50px;
+    margin: 0 2%;
+}
+.hidden {
+    display: none;
+}
+.scroller {
+    display: flex;
+    width: 90vw;
+    margin: 0 auto;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    overflow-x: auto;
+    max-width: 500px;
+}
+input[type="radio"] {
+    display: none;
+}
+input[type="radio"] + label {
+    white-space: nowrap;
+    font-size: 1.2rem;
+    margin: 0 1%;
+    padding: 5px 15px;
+    border: 2px solid #1e90ff;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+input[type="radio"]:checked + label {
+    background-color: #1e90ff;
+    color: #fff;
+}
+@media (max-width: 430px) {
+    #dropTextpc {
+        display: none;
+    }
+    #dropTextsp {
+        display: block;
+        width: 90%;
+        margin: 0 auto;
+    }
+    .drop-container {
+        width: 20vw;
+        height: 20vw;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+    .image-wrapper {
+        display: inline-block;
+        text-align: center;
+    }
+    .arrow {
+        transform: rotate(90deg);
+        min-width: 30px;
+        height: 50px;
+        margin-top: -7px;
+        margin-bottom: -10px;
+    }
+}
+@media (min-width: 431px) {
+    #dropTextpc {
+        display: block;
+    }
+    #dropTextsp {
+        display: none;
+    }
+    .drop-container {
+        width: 60vw;    
+    }
+}

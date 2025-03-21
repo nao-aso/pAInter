@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='icon.png') }}">
+    <title>pAInter</title>
+</head>
+<body>
+    <header>
+        <a href="http://127.0.0.1:5000/">
+            <img src="static\logo.png" alt="アプリロゴ">
+        </a>
+    </header>
+    <form id="uploadForm" action="/submit_form" method="post" enctype="multipart/form-data">
+        <div class="scroller">
+            <input type="radio" id="monet" name="artist" value="monet" onclick="selectArtist('monet')" checked>
+            <label for="monet">モネ</label>
+            <input type="radio" id="vangogh" name="artist" value="vangogh" onclick="selectArtist('vangogh')">
+            <label for="vangogh">ゴッホ</label>
+            <input type="radio" id="cezanne" name="artist" value="cezanne" onclick="selectArtist('cezanne')">
+            <label for="cezanne">セザンヌ</label>
+            <input type="radio" id="ukiyoe" name="artist" value="ukiyoe" onclick="selectArtist('ukiyoe')">
+            <label for="ukiyoe">浮世絵</label>
+        </div>
+        <br>
+        <div class="drop-wrapper">
+            <div class="drop-container" id="dropArea" onclick="openFileDialog()">
+                <p id="dropTextpc">ここにファイルをドロップ<br>or<br>クリックして選択</p>
+                <img src="../static/pixup.png" alt="ここにファイルをドロップ" id="dropTextsp">
+                <input type="file" id="fileInput" name="file" style="display: none;" accept="image/*">
+            </div>
+        </div>
+        <div class="image-wrapper">
+            <div class="image-container">
+                <img id="displayImageLeft" src="{{ uploaded_img or '../static/origin_sample.png' }}" alt="Default Image">
+            </div>
+            <img class="arrow" src="../static/arrow.png" alt="Arrow">
+            <div class="image-container">
+                <img id="displayImageRight" src="{{ processed_img or '../static/gogh_sample.png' }}" alt="Default Image">
+            </div>
+        </div>
+        <br>
+        <input type="hidden" id="artistInput" name="artist">
+        <button type="button" id="transformButton" style="display:none;" onclick="startTransformation()">変換</button>
+    </form>
+    <button id="downloadButton" style="display:none;" onclick="downloadImage()">ダウンロード</button>
+
+    <script>
+        let selectedArtist = "";
+
+        function selectArtist(artist) {
+            selectedArtist = artist;
+            document.getElementById('artistInput').value = artist;
+            console.log(`選択されたアーティスト: ${selectedArtist}`);
+        }
+
+        function openFileDialog() {
+            document.getElementById('fileInput').click();
+        }
+
+        document.getElementById('fileInput').addEventListener('change', handleFiles);
+
+        function handleFiles(event) {
+            const file = event.target.files[0];
+            if (file) {
+                previewFile(file);
+                showTransformButton();
+            }
+        }
+
+        function previewFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('displayImageLeft');
+                const img2 = document.getElementById('displayImageRight');
+                img.src = e.target.result;
+                img.onload = function() {
+                    adjustImageSize(img);
+                };
+                if (img.complete) {
+                    adjustImageSize(img);
+                }
+                img2.src = e.target.result;
+                img2.onload = function() {
+                    adjustImageSize(img2);
+                };
+                if (img2.complete) {
+                    adjustImageSize(img2);
+                }
+                img2.style.filter = "blur(10px)";
+
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+
+            fetch('/submit_form', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('ネットワークの応答が悪いです');
+            }).catch(error => {
+                console.error('フォームの送信中にエラーが発生しました:', error);
+            });
+        }
+
+        function startTransformation() {
+            document.getElementById('uploadForm').submit();	
+        }	
+        function showTransformButton() {	
+            document.getElementById('transformButton').style.display = 'inline';	
+        }
+
+        const dropArea = document.getElementById('dropArea');
+
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('dragover');
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('dragover');
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                document.getElementById('fileInput').files = event.dataTransfer.files;
+                previewFile(file);
+                showTransformButton();
+            }
+        });
+        
+        function showDownloadButton() {
+            document.getElementById('downloadButton').style.display = 'inline';
+        }
+
+        function downloadImage() {
+            const filename = document.getElementById('displayImageRight').src.split('/').pop();
+            const link = document.createElement('a');
+            link.href = `/download/${filename}`;
+            link.download = filename;
+            link.click();
+        }
+
+        window.onload = function() {//ダウンロードボタンの表示
+            const img = document.getElementById('displayImageRight');
+            img.onload = () => adjustContainerSize(img, 'processedImageContainer');
+            {% if processed_img %}
+                console.log('Processed Image Path:', '{{ processed_img }}');
+                showDownloadButton();
+            {% endif %}
+        }
+        function adjustImageSize(img) {//画像の縦横比を維持したまま最大化
+            const containerWidth = img.parentElement.clientWidth;
+            const containerHeight = img.parentElement.clientHeight;
+            const imgRatio = img.naturalWidth / img.naturalHeight;
+            const containerRatio = containerWidth / containerHeight;
+
+            if (imgRatio > containerRatio) {
+                img.style.width = '100%';
+                img.style.height = 'auto';
+            } else {
+                img.style.width = 'auto';
+                img.style.height = '100%';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const img = document.getElementById('displayImageLeft');
+            const img2 = document.getElementById('displayImageRight');
+            img.onload = function() {
+                adjustImageSize(img);
+            };
+            if (img.complete) {
+                adjustImageSize(img);
+            }
+            img2.onload = function() {
+                adjustImageSize(img2);
+            };
+            if (img2.complete) {
+                adjustImageSize(img2);
+            }
+        });
+    </script>
+</body>
+</html>
